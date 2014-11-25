@@ -77,6 +77,8 @@ public class CaptureSignature extends Activity {
 		Boolean Runing = true;// 判斷是否摸線
 		Boolean RuningClc1 = true;// 判斷是否摸元
 		Boolean RuningClc2 = true;// 判斷是否摸元
+		Boolean RuningDel1 = true;// 判斷是否摸叉
+
 		int reSetNum = 0;
 		Bitmap circle_44, delete_44;
 
@@ -155,7 +157,8 @@ public class CaptureSignature extends Activity {
 			// 線的前面
 			circle_44 = BitmapFactory.decodeResource(getResources(),
 					R.drawable.circle_44);
-
+			delete_44 = BitmapFactory.decodeResource(getResources(),
+					R.drawable.delete_44);
 			if (Math.abs(DriHandleC - DriHandleA) > 10
 					|| Math.abs(DriHandleD - DriHandleB) > 10) {
 				// drawAL((int) a, (int) b, (int) c, (int) d);
@@ -164,11 +167,44 @@ public class CaptureSignature extends Activity {
 						- BimWig, paint);
 				canvas.drawBitmap(circle_44, DriHandleC - BimWig, DriHandleD
 						- BimWig, paint);
-				delete_44 = BitmapFactory.decodeResource(getResources(),
-						R.drawable.delete_44);
+
 				// canvas.drawBitmap(delete_44, a-BimWig, b-BimWig, paint);
-				canvas.drawBitmap(delete_44, DriHandleC + (BimWig), DriHandleD
-						- (BimWig * 3), paint);
+
+				BimWig = delete_44.getWidth() / 2;
+				float XsX = DriHandleC + (BimWig * 1);
+				float XsY = DriHandleD - (BimWig * 3);
+				if (DriHandleC - 100 > 0 && DriHandleD - 100 > 0) {
+					// 叉叉在右下邊
+					canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
+							DriHandleD + (BimWig * 1), paint);
+//					// 叉叉在左上邊
+//					canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
+//							DriHandleD - (BimWig * 3), paint);
+
+				} else if (DriHandleC - 100 < 0 && DriHandleD - 100 > 0) {
+					
+					// 叉叉在右上邊（預設）
+					canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
+							DriHandleD - (BimWig * 3), paint);
+//					// 叉叉在左下邊
+//					canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
+//							DriHandleD + (BimWig * 1), paint);
+				} else if (DriHandleC - 100 > 0 && DriHandleD - 100 < 0) {
+//					// 叉叉在右下邊
+//					canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
+//							DriHandleD + (BimWig * 1), paint);
+					// 叉叉在左下邊
+					canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
+							DriHandleD + (BimWig * 1), paint);
+				}
+				if (DriHandleC - 100 < 0 && DriHandleD + 100 < 0) {
+//					// 叉叉在右下邊
+//					canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
+//							DriHandleD + (BimWig * 1), paint);
+					// 叉叉在左下邊
+					canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
+							DriHandleD + (BimWig * 1), paint);
+				}
 			}
 
 		}
@@ -187,13 +223,26 @@ public class CaptureSignature extends Activity {
 				Runing = false;
 				RuningClc1 = false;
 				RuningClc2 = false;
+				RuningDel1 = false;
 				a = eventX;
 				b = eventY;
 				c = eventX;
 				d = eventY;
 
-				if (PassPicture((int) a, (int) b, DriHandleC, DriHandleD,
-						circle_44)) {
+				// DriHandleC + (BimWig*2)
+				// DriHandleD - (BimWig * 4)
+				float BimWig = delete_44.getWidth() / 2;
+				PassPicture((int) a, (int) b, DriHandleC + (BimWig * 2),
+						DriHandleD - (BimWig * 2), delete_44);
+				// PassPicture((int) a, (int) b, DriHandleC + (BimWig * 2),
+				// DriHandleD - (BimWig * 4), delete_44);
+				if (PassPicture((int) a, (int) b, DriHandleC + (BimWig * 2),
+						DriHandleD - (BimWig * 2), delete_44)) {
+					// // 如果叉叉可以被點
+					RuningDel1 = true;
+					//
+				} else if (PassPicture((int) a, (int) b, DriHandleC,
+						DriHandleD, circle_44)) {
 					// 如果第二個圈圈可以被點
 					RuningClc2 = true;
 
@@ -237,13 +286,24 @@ public class CaptureSignature extends Activity {
 			case MotionEvent.ACTION_UP:
 				c = eventX;
 				d = eventY;
-				if (RuningClc2 == true) {
+				if (RuningDel1 == true) {
+					// 如果叉叉可以被點
+					// 讓他點疊合，因為之後沒疊合的會一起存。
+					listX.set(reSetNum, fistX.get(reSetNum));
+					listY.set(reSetNum, fistY.get(reSetNum));
+					// 看不到勒
+					DriHandleA = 0;
+					DriHandleB = 0;
+					DriHandleC = 0;
+					DriHandleD = 0;
+				} else if (RuningClc2 == true) {
 					// 如果第二個圈圈可以被點
 					// 移動點
 					DriHandleC = c;
 					DriHandleD = d;
 					listX.set(reSetNum, (int) c);
 					listY.set(reSetNum, (int) d);
+
 				} else if (RuningClc1 == true) {
 					// 如果第一個圈圈可以被點
 					// 移動點
@@ -424,6 +484,29 @@ public class CaptureSignature extends Activity {
 
 		// 移動的按到的圖
 		public boolean PassPicture(int e1, int e2, float centerX,
+				float centerY, Bitmap BitMapThis) {
+
+			float BimWig = BitMapThis.getWidth() / 2;
+			int RightSide = (int) centerX - (int) BimWig;
+			int LeftSide = (int) centerX + (int) BimWig;
+			int UpSide = (int) centerY - (int) BimWig;
+			int ButtomSide = (int) centerY + (int) BimWig;
+			for (int i = RightSide; i < LeftSide; i++) {
+				for (int j = UpSide; j < ButtomSide; j++) {
+					if (e1 == i && e2 == j) {
+						Log.i("我在這張圖上", "有");
+						return true;
+					}
+				}
+			}
+
+			Log.i("我在這張圖上", "沒有");
+			return false;
+
+		}
+
+		// 移動的按到的圖
+		public boolean PassPicture2(int e1, int e2, float centerX,
 				float centerY, Bitmap BitMapThis) {
 
 			float BimWig = BitMapThis.getWidth() / 2;
