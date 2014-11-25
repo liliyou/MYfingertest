@@ -75,8 +75,10 @@ public class CaptureSignature extends Activity {
 		private Canvas myCanvas;
 
 		Boolean Runing = true;// 判斷是否摸線
-		// Boolean Runing2 = true;//判斷是否摸線
+		Boolean RuningClc1 = true;// 判斷是否摸元
+		Boolean RuningClc2 = true;// 判斷是否摸元
 		int reSetNum = 0;
+		Bitmap circle_44, delete_44;
 
 		// int d2=100;
 		// ArrayList fistX2 = new ArrayList();
@@ -151,20 +153,22 @@ public class CaptureSignature extends Activity {
 			// listY.get(i), paint);// 画线
 			// canvas.drawLine(a, b, c, d, paint);// 画线
 			// 線的前面
-			Bitmap circle_44 = BitmapFactory.decodeResource(getResources(),
+			circle_44 = BitmapFactory.decodeResource(getResources(),
 					R.drawable.circle_44);
 
-			if ((DriHandleC - DriHandleA) > 10
-					|| (DriHandleD - DriHandleB) > 10) {
+			if (Math.abs(DriHandleC - DriHandleA) > 10
+					|| Math.abs(DriHandleD - DriHandleB) > 10) {
 				// drawAL((int) a, (int) b, (int) c, (int) d);
 				float BimWig = circle_44.getWidth() / 2;
-				canvas.drawBitmap(circle_44, DriHandleA - BimWig, DriHandleB - BimWig, paint);
-				canvas.drawBitmap(circle_44, DriHandleC - BimWig, DriHandleD - BimWig, paint);
-				Bitmap delete_44 = BitmapFactory.decodeResource(getResources(),
+				canvas.drawBitmap(circle_44, DriHandleA - BimWig, DriHandleB
+						- BimWig, paint);
+				canvas.drawBitmap(circle_44, DriHandleC - BimWig, DriHandleD
+						- BimWig, paint);
+				delete_44 = BitmapFactory.decodeResource(getResources(),
 						R.drawable.delete_44);
 				// canvas.drawBitmap(delete_44, a-BimWig, b-BimWig, paint);
-				canvas.drawBitmap(delete_44, DriHandleC + (BimWig), DriHandleD - (BimWig * 3),
-						paint);
+				canvas.drawBitmap(delete_44, DriHandleC + (BimWig), DriHandleD
+						- (BimWig * 3), paint);
 			}
 
 		}
@@ -181,12 +185,24 @@ public class CaptureSignature extends Activity {
 				// if (PassLine((int) a, (int) b) != 10000) {
 
 				Runing = false;
+				RuningClc1 = false;
+				RuningClc2 = false;
 				a = eventX;
 				b = eventY;
 				c = eventX;
 				d = eventY;
 
-				if (PassLine((int) a, (int) b) != 10000) {
+				if (PassPicture((int) a, (int) b, DriHandleC, DriHandleD,
+						circle_44)) {
+					// 如果第二個圈圈可以被點
+					RuningClc2 = true;
+
+				} else if (PassPicture((int) a, (int) b, DriHandleA,
+						DriHandleB, circle_44)) {
+					// 如果第一個圈圈可以被點
+					RuningClc1 = true;
+
+				} else if (PassLine((int) a, (int) b) != 10000) {
 					// 這裏說明點下去是線的方法
 					// s = Integer.toString(PassLine((int) a, (int) b));
 					// Log.i("我是線", s);
@@ -201,6 +217,7 @@ public class CaptureSignature extends Activity {
 				} else {
 					// 如果不是點在線上
 					listNum = listNum + 1;
+					reSetNum = listNum - 1;
 					DriHandleA = eventX;
 					DriHandleB = eventY;
 					DriHandleC = eventX;
@@ -218,10 +235,26 @@ public class CaptureSignature extends Activity {
 				// Log.i("TOP", "ACTION_MOVE");
 
 			case MotionEvent.ACTION_UP:
-				if (Runing == true) {
-					// 如果不是點在線上
-					c = eventX;
-					d = eventY;
+				c = eventX;
+				d = eventY;
+				if (RuningClc2 == true) {
+					// 如果第二個圈圈可以被點
+					// 移動點
+					DriHandleC = c;
+					DriHandleD = d;
+					listX.set(reSetNum, (int) c);
+					listY.set(reSetNum, (int) d);
+				} else if (RuningClc1 == true) {
+					// 如果第一個圈圈可以被點
+					// 移動點
+					DriHandleA = c;
+					DriHandleB = d;
+					fistX.set(reSetNum, (int) c);
+					fistY.set(reSetNum, (int) d);
+				} else if (Runing == true) {
+					// 如果不是點在線上繪製線
+					// c = eventX;
+					// d = eventY;
 					DriHandleC = c;
 					DriHandleD = d;
 					listX.set(listNum - 1, (int) c);
@@ -387,6 +420,29 @@ public class CaptureSignature extends Activity {
 			number = 10000;
 			Log.i("回傳線段編號", "沒有");
 			return number;
+		}
+
+		// 移動的按到的圖
+		public boolean PassPicture(int e1, int e2, float centerX,
+				float centerY, Bitmap BitMapThis) {
+
+			float BimWig = BitMapThis.getWidth() / 2;
+			int RightSide = (int) centerX - (int) BimWig;
+			int LeftSide = (int) centerX + (int) BimWig;
+			int UpSide = (int) centerY - (int) BimWig;
+			int ButtomSide = (int) centerY + (int) BimWig;
+			for (int i = RightSide; i < LeftSide; i++) {
+				for (int j = UpSide; j < ButtomSide; j++) {
+					if (e1 == i && e2 == j) {
+						Log.i("我在這張圖上", "有");
+						return true;
+					}
+				}
+			}
+
+			Log.i("我在這張圖上", "沒有");
+			return false;
+
 		}
 		// private void resetDirtyRect(float eventX, float eventY) {
 		// dirtyRect.left = Math.min(lastTouchX, eventX);

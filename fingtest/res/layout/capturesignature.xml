@@ -25,6 +25,7 @@
  
     <LinearLayout
         android:id="@+id/mysignature"
+        android:background="#EE799F"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="horizontal" >
