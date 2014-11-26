@@ -44,6 +44,7 @@ public class CaptureSignature extends Activity {
 
 		save.setOnClickListener(onButtonClick);
 		clear.setOnClickListener(onButtonClick);
+
 	}
 
 	Button.OnClickListener onButtonClick = new Button.OnClickListener() {
@@ -81,6 +82,7 @@ public class CaptureSignature extends Activity {
 
 		int reSetNum = 0;
 		Bitmap circle_44, delete_44;
+		int StateDel = 0;
 
 		// int d2=100;
 		// ArrayList fistX2 = new ArrayList();
@@ -93,6 +95,7 @@ public class CaptureSignature extends Activity {
 
 		public signature(Context context, AttributeSet attrs) {
 			super(context, attrs);
+
 			paint.setAntiAlias(true);
 			paint.setColor(Color.BLACK);
 			paint.setStyle(Paint.Style.STROKE);
@@ -106,6 +109,16 @@ public class CaptureSignature extends Activity {
 			fistY.clear();
 			listX.clear();
 			listY.clear();
+			DriHandleA = 0;
+			DriHandleB = 0;
+			DriHandleC = 0;
+			DriHandleD = 0;
+			reSetNum = 0;
+			listNum = 0;
+			a = 0;
+			b = 0;
+			c = 0;
+			d = 0;
 			invalidate();
 			save.setEnabled(false);
 		}
@@ -143,8 +156,13 @@ public class CaptureSignature extends Activity {
 					// Log.i("我不畫！", s);
 				} else {
 					// 我畫
-					drawAL(fistX.get(i), fistY.get(i), listX.get(i),
-							listY.get(i));
+					if (i % 2 == 1) {
+						drawAL(fistX.get(i), fistY.get(i), listX.get(i),
+								listY.get(i));
+					} else {
+						Bilateral_drawAL(fistX.get(i), fistY.get(i),
+								listX.get(i), listY.get(i));
+					}
 
 				}
 
@@ -171,40 +189,8 @@ public class CaptureSignature extends Activity {
 				// canvas.drawBitmap(delete_44, a-BimWig, b-BimWig, paint);
 
 				BimWig = delete_44.getWidth() / 2;
-				float XsX = DriHandleC + (BimWig * 1);
-				float XsY = DriHandleD - (BimWig * 3);
-				if (DriHandleC - 100 > 0 && DriHandleD - 100 > 0) {
-					// 叉叉在右下邊
-					canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
-							DriHandleD + (BimWig * 1), paint);
-//					// 叉叉在左上邊
-//					canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
-//							DriHandleD - (BimWig * 3), paint);
+				DrawDeleatIcon(BimWig, canvas);
 
-				} else if (DriHandleC - 100 < 0 && DriHandleD - 100 > 0) {
-					
-					// 叉叉在右上邊（預設）
-					canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
-							DriHandleD - (BimWig * 3), paint);
-//					// 叉叉在左下邊
-//					canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
-//							DriHandleD + (BimWig * 1), paint);
-				} else if (DriHandleC - 100 > 0 && DriHandleD - 100 < 0) {
-//					// 叉叉在右下邊
-//					canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
-//							DriHandleD + (BimWig * 1), paint);
-					// 叉叉在左下邊
-					canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
-							DriHandleD + (BimWig * 1), paint);
-				}
-				if (DriHandleC - 100 < 0 && DriHandleD + 100 < 0) {
-//					// 叉叉在右下邊
-//					canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
-//							DriHandleD + (BimWig * 1), paint);
-					// 叉叉在左下邊
-					canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
-							DriHandleD + (BimWig * 1), paint);
-				}
 			}
 
 		}
@@ -236,8 +222,7 @@ public class CaptureSignature extends Activity {
 						DriHandleD - (BimWig * 2), delete_44);
 				// PassPicture((int) a, (int) b, DriHandleC + (BimWig * 2),
 				// DriHandleD - (BimWig * 4), delete_44);
-				if (PassPicture((int) a, (int) b, DriHandleC + (BimWig * 2),
-						DriHandleD - (BimWig * 2), delete_44)) {
+				if (PassDel(BimWig)) {
 					// // 如果叉叉可以被點
 					RuningDel1 = true;
 					//
@@ -384,6 +369,83 @@ public class CaptureSignature extends Activity {
 
 		}
 
+		/**
+		 * 画箭头
+		 * 
+		 * @param sx
+		 * @param sy
+		 * @param ex
+		 * @param ey
+		 */
+		public void Bilateral_drawAL(int sx, int sy, int ex, int ey) {
+			double H = 8; // 箭头高度
+			double L = 3.5; // 底边的一半
+			int x1 = 0;
+			int y1 = 0;
+			int x2 = 0;
+			int y2 = 0;
+			int x3 = 0;
+			int y3 = 0;
+			int x4 = 0;
+			int y4 = 0;
+			double awrad = Math.atan(L / H); // 箭头角度
+			double arraow_len = Math.sqrt(L * L + H * H); // 箭头的长度
+			double[] arrXY_1 = rotateVec(sx - ex, sy - ey, awrad, true,
+					arraow_len);
+			double[] arrXY_2 = rotateVec(sx - ex, sy - ey, -awrad, true,
+					arraow_len);
+			double[] arrXY_3 = rotateVec(ex - sx, ey - sy, awrad, true,
+					arraow_len);
+			double[] arrXY_4 = rotateVec(ex - sx, ey - sy, -awrad, true,
+					arraow_len);
+
+			double x_1 = sx - arrXY_1[0]; // (x1,y1)是第一端点
+			double y_1 = sy - arrXY_1[1];
+			double x_2 = sx - arrXY_2[0]; // (x2,y2)是第二端点
+			double y_2 = sy - arrXY_2[1];
+
+			double x_3 = ex - arrXY_3[0]; // (x3,y3)是第一端点
+			double y_3 = ey - arrXY_3[1];
+			double x_4 = ex - arrXY_4[0]; // (x4,y4)是第二端点
+			double y_4 = ey - arrXY_4[1];
+
+			Double X1 = new Double(x_1);
+			x1 = X1.intValue();
+			Double Y1 = new Double(y_1);
+			y1 = Y1.intValue();
+			Double X2 = new Double(x_2);
+			x2 = X2.intValue();
+			Double Y2 = new Double(y_2);
+			y2 = Y2.intValue();
+
+			Double X3 = new Double(x_3);
+			x3 = X3.intValue();
+			Double Y3 = new Double(y_3);
+			y3 = Y3.intValue();
+			Double X4 = new Double(x_4);
+			x4 = X4.intValue();
+			Double Y4 = new Double(y_4);
+			y4 = Y4.intValue();
+			// 画线
+			myCanvas.drawLine(sx, sy, ex, ey, paint);
+			// 一開始的點
+			Path triangle2 = new Path();
+			triangle2.moveTo(sx, sy);
+			triangle2.lineTo(x1, y1);
+			triangle2.lineTo(x2, y2);
+			triangle2.close();
+			// 後面的點
+			Path triangle = new Path();
+			triangle.moveTo(ex, ey);
+			triangle.lineTo(x3, y3);
+			triangle.lineTo(x4, y4);
+			triangle.close();
+
+			myCanvas.drawPath(triangle2, paint);
+			myCanvas.drawPath(triangle, paint);
+
+		}
+
 		// 计算
 		public double[] rotateVec(int px, int py, double ang, boolean isChLen,
 				double newLen) {
@@ -505,34 +567,110 @@ public class CaptureSignature extends Activity {
 
 		}
 
-		// 移動的按到的圖
-		public boolean PassPicture2(int e1, int e2, float centerX,
-				float centerY, Bitmap BitMapThis) {
+		// 判斷手勢位置來畫叉叉
+		public void DrawDeleatIcon(float BimWig, Canvas canvas) {
 
-			float BimWig = BitMapThis.getWidth() / 2;
-			int RightSide = (int) centerX - (int) BimWig;
-			int LeftSide = (int) centerX + (int) BimWig;
-			int UpSide = (int) centerY - (int) BimWig;
-			int ButtomSide = (int) centerY + (int) BimWig;
-			for (int i = RightSide; i < LeftSide; i++) {
-				for (int j = UpSide; j < ButtomSide; j++) {
-					if (e1 == i && e2 == j) {
-						Log.i("我在這張圖上", "有");
-						return true;
-					}
-				}
+			boolean XUpSide = false, XDownSide = false, XRightSide = false, XLeftSide = false;
+			if (DriHandleD - (BimWig * 4) < 0) {
+				Log.i("Ｘ位置", "上面");
+				XUpSide = true;
+			}
+			if (DriHandleD + (BimWig * 4) > canvas.getHeight()) {
+				Log.i("Ｘ位置", "下面");
+				XDownSide = true;
+			}
+			if (DriHandleC + (BimWig * 4) > canvas.getWidth()) {
+				Log.i("Ｘ位置", "右邊");
+				XRightSide = true;
+			}
+			if (DriHandleC - (BimWig * 4) < 0) {
+				Log.i("Ｘ位置", "左邊");
+				XLeftSide = true;
 			}
 
-			Log.i("我在這張圖上", "沒有");
-			return false;
+			// 碰到上面&&碰到右邊 Ｘ到左下角
+			// 碰到上面&&碰到左邊 Ｘ到右下角
+			// 碰到下面&&碰到右邊 X到左上角
+			// 沒有碰到上面&&碰到右邊 X到左上角
+			// 碰到上面&&沒有碰到右邊 XＸ到右下角
+			// else
+
+			if (XUpSide && XRightSide) {
+				// 叉叉在左下邊
+				canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
+						DriHandleD + (BimWig * 1), paint);
+				StateDel = 1;
+			} else if (XUpSide && XLeftSide) {
+				// 叉叉在右下邊
+				canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
+						DriHandleD + (BimWig * 1), paint);
+				StateDel = 2;
+			} else if (XDownSide && XRightSide) {
+				// 叉叉在左上邊
+				canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
+						DriHandleD - (BimWig * 3), paint);
+				StateDel = 3;
+			} else if (!XUpSide && XRightSide) {
+				// 叉叉在左上邊
+				canvas.drawBitmap(delete_44, DriHandleC - (BimWig * 3),
+						DriHandleD - (BimWig * 3), paint);
+				StateDel = 3;
+			} else if (XUpSide && !XRightSide) {
+				// 叉叉在右下邊
+				canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
+						DriHandleD + (BimWig * 1), paint);
+				StateDel = 2;
+			} else {
+				// 叉叉在右上邊（預設）
+				canvas.drawBitmap(delete_44, DriHandleC + (BimWig * 1),
+						DriHandleD - (BimWig * 3), paint);
+				StateDel = 0;
+			}
 
 		}
-		// private void resetDirtyRect(float eventX, float eventY) {
-		// dirtyRect.left = Math.min(lastTouchX, eventX);
-		// dirtyRect.right = Math.max(lastTouchX, eventX);
-		// dirtyRect.top = Math.min(lastTouchY, eventY);
-		// dirtyRect.bottom = Math.max(lastTouchY, eventY);
-		// }
+
+		//判斷有沒有按叉叉
+		public boolean PassDel(float BimWig) {
+			
+			switch (StateDel) {
+			case 0:
+				// 叉叉在右上邊（預設）
+				if (PassPicture((int) a, (int) b, DriHandleC + (BimWig * 2),
+						DriHandleD - (BimWig * 2), delete_44)) {
+					return true;
+				}
+				break;
+			case 1:
+				// 叉叉在左下邊
+				if (PassPicture((int) a, (int) b, DriHandleC - (BimWig * 3)+ (BimWig * 1),
+						DriHandleD + (BimWig * 1)+ (BimWig * 1), delete_44)) {
+					return true;
+				}
+				break;
+			case 2:
+				// 叉叉在右下邊
+				if (PassPicture((int) a, (int) b, DriHandleC + (BimWig * 1)+ (BimWig * 1),
+						DriHandleD + (BimWig * 1)+ (BimWig * 1), delete_44)) {
+					return true;
+				}
+				break;
+			case 3:
+				// 叉叉在左上邊
+				if (PassPicture((int) a, (int) b, DriHandleC - (BimWig * 3)+ (BimWig * 1),
+						DriHandleD - (BimWig * 3)+ (BimWig * 1), delete_44)) {
+					return true;
+				}
+				break;
+			default:
+				break;
+
+			}
+			
+			
+			// DriHandleC + (BimWig * 1)+ (BimWig * 1)
+			// DriHandleD - (BimWig * 3)+ (BimWig * 1)
+			return false;
+		}
 	}
 
 }
